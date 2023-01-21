@@ -1,23 +1,38 @@
 package com.tool.govukparser.entity;
 
+import javax.persistence.*;
 import java.util.Objects;
 
 /**
- * @author Albina Gimaletdinova on 17/01/2023
+ * @author Albina Gimaletdinova on 21/01/2023
  */
-public class OrganizationData {
-    private final String name;
-    private final String city; // todo add town library
-    private final String county;
-    private final String rating;
-    private final String route;
+@Entity
+@Table(uniqueConstraints = {
+        @UniqueConstraint(name = "UniqueRow", columnNames = { "name", "city", "county", "rating", "route" })
+})
+public class Company {
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
+    private String name;
+    private String city; // todo add UK cities library
+    private String county;
+    private String rating;
+    private String route;
 
-    public OrganizationData(String name, String city, String county, String rating, String route) {
+    public Company() {
+    }
+
+    public Company(String name, String city, String county, String rating, String route) {
         this.name = name;
         this.city = city;
         this.county = county;
         this.rating = rating;
         this.route = route;
+    }
+
+    public Long getId() {
+        return id;
     }
 
     public String getName() {
@@ -44,8 +59,8 @@ public class OrganizationData {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        OrganizationData that = (OrganizationData) o;
-        return Objects.equals(name, that.name) && Objects.equals(city, that.city) && Objects.equals(county, that.county) && Objects.equals(rating, that.rating) && Objects.equals(route, that.route);
+        Company company = (Company) o;
+        return Objects.equals(name, company.name) && Objects.equals(city, company.city) && Objects.equals(county, company.county) && Objects.equals(rating, company.rating) && Objects.equals(route, company.route);
     }
 
     @Override
@@ -55,8 +70,9 @@ public class OrganizationData {
 
     @Override
     public String toString() {
-        return "CompanyDataRow{" +
-                "companyName='" + name + '\'' +
+        return "Company{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
                 ", city='" + city + '\'' +
                 ", county='" + county + '\'' +
                 ", rating='" + rating + '\'' +

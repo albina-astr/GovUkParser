@@ -1,0 +1,19 @@
+<html>
+
+<title>Unique Objects</title>
+
+<style>
+    div.mytable {
+      margin: auto;
+      width: 1020px;
+      padding: 10px;
+</style>
+
+<table>
+    <tbody>
+    <tr th:each="obj, iStat : ${string_objects}" th:style="${iStat.odd}? 'font-weight: normal;'">
+        <td th:text="${obj}"></td>
+    </tr>
+    </tbody>
+</table>
+</html>

@@ -1,0 +1,34 @@
+<html>
+
+<title>Company List</title>
+
+<style>
+    div.mytable {
+      margin: auto;
+      width: 1020px;
+      padding: 10px;
+    }
+</style>
+
+<table>
+    <thead class="ttop">
+    <tr class="table-info">
+        <td><b>Company Name</b> </td>
+        <td><b>City</b> </td>
+        <td><b>County</b> </td>
+        <td><b>Type/Rating</b> </td>
+        <td><b>Route</b> </td>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="company, iStat : ${companies}" th:style="${iStat.odd}? 'font-weight: normal;'">
+
+        <td th:text="${company.name}"></td>
+        <td th:text="${company.city}"></td>
+        <td th:text="${company.county}"></td>
+        <td th:text="${company.rating}"></td>
+        <td th:text="${company.route}"></td>
+    </tr>
+    </tbody>
+</table>
+</html>

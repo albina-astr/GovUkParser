@@ -1,17 +1,19 @@
 package com.tool.govukparser.service;
 
-import com.tool.govukparser.entity.OrganizationData;
+import com.opencsv.CSVReader;
+import com.tool.govukparser.entity.Company;
+import com.tool.govukparser.repository.CompanyRepository;
+import org.apache.commons.text.WordUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.net.URLConnection;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Scanner;
+import java.util.*;
 
 /**
  * @author Albina Gimaletdinova on 17/01/2023
@@ -20,10 +22,106 @@ import java.util.Scanner;
 public class GovUkParserServiceImpl implements GovUkParserService {
     private static final String MAIN_PAGE_URL =
             "https://www.gov.uk/government/publications/register-of-licensed-sponsors-workers";
-    private static final int ROWS_LIMIT = 100;
+
+    @Autowired
+    private CompanyRepository repository;
 
     @Override
-    public String retrieveCsvFileUrl() {
+    public void parseAndStoreData() {
+        Set<Company> companiesData = readCsvFile(retrieveCsvFileUrl());
+        storeData(companiesData);
+    }
+
+    @Override
+    public List<Company> getByCompanyName(String companyName) {
+        validate(companyName);
+
+        List<Company> data = repository.findByName(companyName);
+        System.out.println("Found " + data.size() + " rows of data by company name.");
+        return data;
+    }
+
+    @Override
+    public List<Company> getByCity(String city) {
+        validate(city);
+        city = normalizeCity(city);
+
+        List<Company> data = repository.findByCity(city);
+        System.out.println("Found " + data.size() + " rows of data by city.");
+        return data;
+    }
+
+    @Override
+    public List<Company> getByCounty(String county) {
+        validate(county);
+
+        List<Company> data = repository.findByCounty(county);
+        System.out.println("Found " + data.size() + " rows of data by county.");
+        return data;
+    }
+
+    @Override
+    public List<Company> getByRating(String rating) {
+        validate(rating);
+
+        List<Company> data = repository.findByRating(rating);
+        System.out.println("Found " + data.size() + " rows of data by rating.");
+        return data;
+    }
+
+    @Override
+    public List<Company> getByRoute(String route) {
+        validate(route);
+
+        List<Company> data = repository.findByRoute(route);
+        System.out.println("Found " + data.size() + " rows of data by route.");
+        return data;
+    }
+
+    @Override
+    public List<String> getUniqueCompanyNames() {
+        return repository.findDistinctCompanyNames();
+    }
+
+    @Override
+    public List<String> getUniqueCities() {
+        return repository.findDistinctCities();
+    }
+
+    @Override
+    public List<String> getUniqueCounties() {
+        return repository.findDistinctCounties();
+    }
+
+    @Override
+    public List<String> getUniqueRatings() {
+        return repository.findDistinctRatings();
+    }
+
+    @Override
+    public List<String> getUniqueRoutes() {
+        return repository.findDistinctRoutes();
+    }
+
+    private static void validate(String city) {
+        if (city == null || city.isEmpty()) {
+            throw new IllegalArgumentException("CsvFileUrl and city must not be null or empty!");
+        }
+    }
+
+    private static String normalizeCity(String city) {
+        city = city.trim();
+
+        if (city.startsWith(",")) {
+            city = city.substring(1);
+        }
+        if (city.endsWith(",")) {
+            city = city.substring(0, city.length() - 1);
+        }
+        return WordUtils.capitalizeFully(city, '-', ',', ' ');
+    }
+
+    private String retrieveCsvFileUrl() {
         String csvUrl = "";
         try {
             Document doc = Jsoup.connect(MAIN_PAGE_URL).get();
@@ -36,40 +134,43 @@ public class GovUkParserServiceImpl implements GovUkParserService {
         return csvUrl;
     }
 
-    @Override
-    public List<OrganizationData> getByCity(String csvFileUrl, String city) {
-        if (csvFileUrl == null || csvFileUrl.isEmpty() || city == null || city.isEmpty()) {
-            throw new IllegalArgumentException("CsvFileUrl and city must not be null or empty!");
-        }
-
-        List<OrganizationData> cityData = new ArrayList<>();
+    private Set<Company> readCsvFile(String csvFileUrl) {
+        System.out.println("Starting read from CSV file...");
+        Set<Company> cityData = new HashSet<>();
         try {
-            Scanner input = getInputStreamScanner(csvFileUrl);
+            URL csvDataUrl = new URL(csvFileUrl);
+            URLConnection csvData = csvDataUrl.openConnection();
+            CSVReader csvReader = new CSVReader(new InputStreamReader(csvData.getInputStream()));
+            String[] nextRecord;
 
-            int counter = 1;
-            while (input.hasNextLine()) {
-                String line = input.nextLine().replaceAll("\"", "");
-                String[] pieces = line.split(",");
-                if (pieces[1].contains(city)) {
-                    cityData.add(new OrganizationData(pieces[0], pieces[1], pieces[2], pieces[3], pieces[4]));
+            while ((nextRecord = csvReader.readNext()) != null) {
+                if (nextRecord.length != 5) {
+                    throw new RuntimeException("There are not 5 columns!");
                 }
-                if (++counter > ROWS_LIMIT) {
-                    System.out.println("Row limit has been reached. Stopping to read the file");
-                    break;
-                }
+                Company obj = new Company(nextRecord[0], normalizeCity(nextRecord[1]), nextRecord[2], nextRecord[3],
+                        nextRecord[4]);
+                cityData.add(obj);
             }
         } catch (Exception ex) {
             System.out.println(ex);
         }
 
-        System.out.println("Found " + cityData.size() + " organizations");
+        Iterator<Company> it = cityData.stream().iterator();
+        while (it.hasNext()) {
+            Company current = it.next();
+            if (current.getCity().matches("^[\\d]+") && !current.getCounty().isEmpty()) {
 
+            }
+        }
+
+        System.out.println("Successfully read the file! Got " + cityData.size() + " rows.");
         return cityData;
     }
 
-    private static Scanner getInputStreamScanner(String csvFileUrl) throws IOException {
-        URL csvDataUrl = new URL(csvFileUrl);
-        URLConnection csvData = csvDataUrl.openConnection();
-        return new Scanner(csvData.getInputStream());
+    private void storeData(Collection<Company> companiesData) {
+        repository.deleteAll();
+        System.out.println("Start to store all the companies data, " + companiesData.size() + " rows...");
+        repository.saveAll(companiesData);
+        System.out.println("Successfully saved all the companies data!");
     }
 }

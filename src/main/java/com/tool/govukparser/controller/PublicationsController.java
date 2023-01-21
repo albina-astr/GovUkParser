@@ -1,6 +1,6 @@
 package com.tool.govukparser.controller;
 
-import com.tool.govukparser.entity.OrganizationData;
+import com.tool.govukparser.entity.Company;
 import com.tool.govukparser.service.GovUkParserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -24,17 +24,74 @@ public class PublicationsController {
         return "home";
     }
 
+    @GetMapping("/company/{name}")
+    public String getByCompanyName(@PathVariable String name, Model model) {
+        List<Company> data = parserService.getByCompanyName(name);
+        model.addAttribute("companies", data);
+        return "companies";
+    }
+
     @GetMapping("/city/{city}")
     public String getByCity(@PathVariable String city, Model model) {
-        try {
-            String csvUrl = parserService.retrieveCsvFileUrl();
-            List<OrganizationData> byCityData = parserService.getByCity(csvUrl, city);
-            model.addAttribute("organizations", byCityData);
+        System.out.println(city); // todo delete
+        List<Company> data = parserService.getByCity(city);
+        model.addAttribute("companies", data);
+        return "companies";
+    }
 
-            return "organizations";
-        } catch (Exception ex) {
-            System.out.println(ex);
-        }
-        return "organizations";
+    @GetMapping("/county/{county}")
+    public String getByCounty(@PathVariable String county, Model model) {
+        List<Company> data = parserService.getByCounty(county);
+        model.addAttribute("companies", data);
+        return "companies";
+    }
+
+    @GetMapping("/rating/{rating}")
+    public String getByRating(@PathVariable String rating, Model model) {
+        List<Company> data = parserService.getByRating(rating);
+        model.addAttribute("companies", data);
+        return "companies";
+    }
+
+    @GetMapping("/route/{route}")
+    public String getByRoute(@PathVariable String route, Model model) {
+        List<Company> data = parserService.getByRating(route);
+        model.addAttribute("companies", data);
+        return "companies";
+    }
+
+    @GetMapping("/companies")
+    public String getUniqueCompanyNames(Model model) {
+        List<String> data = parserService.getUniqueCompanyNames();
+        model.addAttribute("string_objects", data);
+        return "object_list";
+    }
+
+    @GetMapping("/cities")
+    public String getUniqueCities(Model model) {
+        List<String> data = parserService.getUniqueCities();
+        model.addAttribute("string_objects", data);
+        return "object_list";
+    }
+
+    @GetMapping("/counties")
+    public String getUniqueCounties(Model model) {
+        List<String> data = parserService.getUniqueCounties();
+        model.addAttribute("string_objects", data);
+        return "object_list";
+    }
+
+    @GetMapping("/ratings")
+    public String getUniqueRatings(Model model) {
+        List<String> data = parserService.getUniqueRatings();
+        model.addAttribute("string_objects", data);
+        return "object_list";
+    }
+
+    @GetMapping("/routes")
+    public String getUniqueRoutes(Model model) {
+        List<String> data = parserService.getUniqueRoutes();
+        model.addAttribute("string_objects", data);
+        return "object_list";
     }
 }
